@@ -1,46 +1,171 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <title>Exercise Tracker | freeCodeCamp</title>
-    <link rel="shortcut icon" href="https://cdn.freecodecamp.org/universal/favicons/favicon.ico"  type="image/x-icon" />
-    <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet" type="text/css" />
-    <link href="style.css" rel="stylesheet" type="text/css" />
-  </head>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Exercise Tracker</title>
+  <link rel="shortcut icon" href="https://cdn.freecodecamp.org/universal/favicons/favicon.ico" type="image/x-icon" />
+  <link href="https://fonts.googleapis.com/css?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Roboto', sans-serif;
+      background-color: #f9f9f9;
+      color: #333;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+    h1 {
+      color: #007bff;
+      margin: 20px 0;
+    }
+    .container {
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      max-width: 600px;
+      width: 90%;
+    }
+    form {
+      margin-bottom: 20px;
+    }
+    form h2 {
+      color: #007bff;
+      margin-bottom: 10px;
+    }
+    form input[type="text"] {
+      width: calc(100% - 20px);
+      padding: 10px;
+      margin-bottom: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-size: 1rem;
+    }
+    form input[type="submit"] {
+      background-color: #007bff;
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      font-size: 1rem;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    form input[type="submit"]:hover {
+      background-color: #0056b3;
+    }
+    .feedback {
+      margin-top: 10px;
+      font-size: 0.9rem;
+    }
+    .error {
+      color: red;
+    }
+    .success {
+      color: green;
+    }
+    footer {
+      margin-top: 20px;
+      font-size: 0.9rem;
+      color: #666;
+    }
+    footer a {
+      color: #007bff;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Exercise Tracker</h1>
+    <form id="create-user-form" action="/api/users" method="post">
+      <h2>Create a New User</h2>
+      <input id="uname" type="text" name="username" placeholder="Username" required>
+      <input type="submit" value="Create User">
+    </form>
+    <div id="create-user-feedback" class="feedback"></div>
 
-  <body>
-    <div class="container">
-      <h1>Exercise tracker</h1>
-      <form action="/api/users" method="post">
-        <h2>Create a New User</h2>
-        <p><code>POST /api/users</code></p>
-        <input id="uname" type="text" name="username" placeholder="username" />
-        <input type="submit" value="Submit" />
-      </form>
-      <form action="/api/users/:_id/exercises" id="exercise-form" method="post">
-        <h2>Add exercises</h2>
-        <p><code>POST /api/users/:_id/exercises</code></p>
-        <input id="uid" type="text" name=":_id" placeholder=":_id" />
-        <input id="desc" type="text" name="description" placeholder="description*" />
-        <input id="dur" type="text" name="duration" placeholder="duration* (mins.)" />
-        <input id="date" type="text" name="date" placeholder="date (yyyy-mm-dd)" />
-        <input type="submit" value="Submit" />
-      </form>
-      <p>
-        <strong>GET user's exercise log: </strong>
-        <code>GET /api/users/:_id/logs?[from][&amp;to][&amp;limit]</code>
-      </p>
-      <p><strong>[ ]</strong> = optional</p>
-      <p><strong>from, to</strong> = dates (yyyy-mm-dd); <strong>limit</strong> = number</p>
-    </div>
-    <script>
-      const exerciseForm = document.getElementById("exercise-form");
+    <form id="exercise-form" method="post">
+      <h2>Add Exercises</h2>
+      <input id="uid" type="text" name=":_id" placeholder="User ID" required>
+      <input id="desc" type="text" name="description" placeholder="Description" required>
+      <input id="dur" type="text" name="duration" placeholder="Duration (mins)" required>
+      <input id="date" type="text" name="date" placeholder="Date (yyyy-mm-dd)">
+      <input type="submit" value="Add Exercise">
+    </form>
+    <div id="exercise-feedback" class="feedback"></div>
 
-      exerciseForm.addEventListener("submit", () => {
-        const userId = document.getElementById("uid").value;
-        exerciseForm.action = `/api/users/${userId}/exercises`;
+    <h2>Get User Logs</h2>
+    <p><code>GET /api/users/:_id/logs?[from][&to][&limit]</code></p>
+    <p><strong>[ ]</strong> = optional</p>
+    <p><strong>from, to</strong> = dates (yyyy-mm-dd); <strong>limit</strong> = number</p>
+  </div>
+  <footer>
+    <p>By <a href="https://github.com/ChipiMedia" target="_blank">Chipi Media</a></p>
+  </footer>
+  <script>
+    // Handle user creation
+    const createUserForm = document.getElementById("create-user-form");
+    createUserForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const username = document.getElementById("uname").value;
+      const feedback = document.getElementById("create-user-feedback");
 
-        exerciseForm.submit();
-      });
-    </script>
-  </body>
+      try {
+        const response = await fetch('/api/users', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username })
+        });
+        const data = await response.json();
+
+        if (data.error) {
+          feedback.textContent = `Error: ${data.error}`;
+          feedback.className = "feedback error";
+        } else {
+          feedback.textContent = `Success: User ${data.username} created with ID ${data._id}`;
+          feedback.className = "feedback success";
+        }
+      } catch (err) {
+        feedback.textContent = "An error occurred. Please try again.";
+        feedback.className = "feedback error";
+      }
+    });
+
+    // Handle exercise addition
+    const exerciseForm = document.getElementById("exercise-form");
+    exerciseForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const userId = document.getElementById("uid").value;
+      const description = document.getElementById("desc").value;
+      const duration = document.getElementById("dur").value;
+      const date = document.getElementById("date").value;
+      const feedback = document.getElementById("exercise-feedback");
+
+      try {
+        const response = await fetch(`/api/users/${userId}/exercises`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ description, duration, date })
+        });
+        const data = await response.json();
+
+        if (data.error) {
+          feedback.textContent = `Error: ${data.error}`;
+          feedback.className = "feedback error";
+        } else {
+          feedback.textContent = `Exercise added: ${data.description} (${data.duration} mins) on ${data.date}`;
+          feedback.className = "feedback success";
+        }
+      } catch (err) {
+        feedback.textContent = "An error occurred. Please try again.";
+        feedback.className = "feedback error";
+      }
+    });
+  </script>
+</body>
 </html>
+
